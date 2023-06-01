@@ -44,7 +44,12 @@ La raison pour laquelle nous utilisons Freeradius est qu'il offre un large éven
 **Questions:**
 
 - Qu'est-ce que le mode debug et pourquoi est-il utile dans cette situation ?
+
+  > Cela nous permet de voir et comprendre le fonctionnement du serveur. On peut ainsi configurer le serveur correctement.
 - Que se passe-t-il si vous essayez de lancer Freeradius en mode debug alors que le service est en cours d'exécution ?
+
+  > Failed binding to auth address 127.0.0.1 port 18120 bound to server inner-tunnel: Address already in use 
+  > /etc/freeradius/3.0/sites-enabled/inner-tunnel[33]: Error binding to port for 127.0.0.1 port 18120
 
 ## Section 2: Ajout d'un utilisateur
 
@@ -56,18 +61,35 @@ La raison pour laquelle nous utilisons Freeradius est qu'il offre un large éven
     any_username Cleartext-Password := “any_password”
     ```
 
+    > admin Cleartext-Password := "admin"
+
 3. Testez Freeradius en mode debug à nouveau pour voir si l'utilisateur a été correctement ajouté.
+
+    > L'utilisateur n'apparait pas dans l'output du mode debug mais il apparait avec la commande suivante
+    >
+    > ```bash
+    > radtest admin admin 127.0.0.1 1812 testing123
+    > ```
+    >
+    > ![check_user](img/check_user.png)
 
 **Questions:**
 
 - Que représente la ligne que vous avez ajoutée au fichier ?
+
+  > Elle définit un utilisateur du serveur radius. Nous avons configuré le minimum: login/password (nous avons du indiquer que l'authentification se fait avec mot-de-passe en clair).
+  > Plus d'options sont possibles, nous pouvons voir l'exemple "steve" présent dans le fichier
 - Pourquoi est-il important de tester Freeradius après avoir ajouté un utilisateur ?
+
+  > Si l'utilisateur n'a pas été ajouté, il y a un problème avec l'installation
+
+
 
 ## Section 3: Test du serveur avec un client local
 
 1. Le fichier `/etc/freeradius/3.0/clients.conf` vous permet de définir les clients. Nous allons d'abord tester depuis localhost en utilisant radtest.
 
-2. Le mot de passe par défaut pour le client localhost est `testing123`.
+2. Le mot de passe par défaut pour le client localhost est `testing123` (**C'est le mot-de-passe de "l'AP"**, l'AP joue le rôle de client dans une connection au serveur radius).
 
 3. Testez le serveur avec l'utilisateur que vous avez créé précédemment. Lancez le serveur Freeradius en mode debug et, depuis un autre terminal, utilisez le client radtest :
 
@@ -78,7 +100,13 @@ La raison pour laquelle nous utilisons Freeradius est qu'il offre un large éven
 **Questions:**
 
 - Qu'est-ce que le fichier `clients.conf` ?
+
+  > un fichier contenant la liste des clients: les APs.
 - Qu'est-ce que radtest et comment l'utilisez-vous pour tester votre serveur Freeradius ?
+
+  > C'est un client de test pour les serveurs radius. Nous l'utilisons comme le ferait un AP
+
+
 
 ## Section 4: Ajout du point d'accès (AP) à clients.conf
 
@@ -94,7 +122,13 @@ La raison pour laquelle nous utilisons Freeradius est qu'il offre un large éven
 **Questions:**
 
 - Qu'est-ce que cette configuration signifie et pourquoi est-elle nécessaire ?
+
+  > Elle indique les appareils pouvant se connecter.  Chaque appareil est défini par son IP et possède un secret pour s'authentifier
 - Quel est le rôle de l'adresse IP et du mot de passe secret dans cette configuration ?
+
+  > L'ip permet d'identifier l'appareil de par son origine (~login) et le mot de passe  permet de s'authentifier
+
+  
 
 ## Section 5: Configuration du point d'accès pour la connexion Enterprise
 
@@ -103,12 +137,29 @@ La raison pour laquelle nous utilisons Freeradius est qu'il offre un large éven
 ![](images/Topologie.png)
 
 2. Configurez l'AP pour la connexion Enterprise (cette configuration varie en fonction du fabriquant de l'AP/routeur sans-fil). 
+
+   > 1. Brancher l'AP et l'ordinateur sur le même réseau (ici: cable RJ45 entre les 2 appareils)
+   > 2. Allumer l'appareil
+   > 3. Se connecter à firefox sur l'IP de l'AP: 192.168.1.1
+   >    Nb: le mdp par défaut est donné sur la page de connexion dans `show hint`
+   > 4. [Configurer l'AP](https://www.linksys.com/support-article?articleNum=316287): 
+   >    ![ap_config](img/ap_config.png)
+   > 5. Don't forget to restart the freeradius server
+
 3. Démarrez le serveur Freeradius en mode debug et connectez-vous via le WiFi que vous avez configuré sur l'AP. Votre suppliant peut être un téléphone ou un laptop, par exemple.
 
 **Questions:**
 
 - Qu'est-ce qu'une connexion Enterprise et pourquoi est-elle importante ?
+
+  > TODO
+
 - Quels paramètres devez-vous configurer sur l'AP pour établir une connexion Enterprise ?
+
+  > Security Node: WPA2 Enterprise
+  > Shared Key: router123
+
+  
 
 ## Section 6: Configuration des méthodes d'authentification
 
